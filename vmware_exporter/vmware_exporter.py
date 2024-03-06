@@ -101,6 +101,10 @@ class VmwareCollector():
             'datastores': ['ds_name', 'dc_name', 'ds_cluster'],
             'hosts': ['host_name', 'dc_name', 'cluster_name'],
             'host_perf': ['host_name', 'dc_name', 'cluster_name'],
+            'host_perf_storage': ['host_name', 'dc_name', 'cluster_name', 'device'],
+            'host_perf_datastore': ['host_name', 'dc_name', 'cluster_name', 'datastore'],
+            'host_perf_adapter': ['host_name', 'dc_name', 'cluster_name', 'interface'],
+            'host_perf_network': ['host_name', 'dc_name', 'cluster_name', 'interface'],
         }
 
         # if tags are gonna be fetched 'tags' will be a label too
@@ -115,6 +119,10 @@ class VmwareCollector():
             'vm_perf': [],
             'hosts': [],
             'host_perf': [],
+            'host_perf_storage': [],
+            'host_perf_datastore': [],
+            'host_perf_adapter': [],
+            'host_perf_network': [],
             'datastores': [],
         }
 
@@ -147,14 +155,14 @@ class VmwareCollector():
                 labels=self._labelNames['vms']),
         }
         metric_list['vmguests'] = {
-            'vmware_vm_guest_disk_free': GaugeMetricFamily(
-                'vmware_vm_guest_disk_free',
-                'Disk metric per partition',
-                labels=self._labelNames['vmguests'] + ['partition', ]),
-            'vmware_vm_guest_disk_capacity': GaugeMetricFamily(
-                'vmware_vm_guest_disk_capacity',
-                'Disk capacity metric per partition',
-                labels=self._labelNames['vmguests'] + ['partition', ]),
+            # 'vmware_vm_guest_disk_free': GaugeMetricFamily(
+            #     'vmware_vm_guest_disk_free',
+            #     'Disk metric per partition',
+            #     labels=self._labelNames['vmguests'] + ['partition', ]),
+            # 'vmware_vm_guest_disk_capacity': GaugeMetricFamily(
+            #     'vmware_vm_guest_disk_capacity',
+            #     'Disk capacity metric per partition',
+            #     labels=self._labelNames['vmguests'] + ['partition', ]),
             'vmware_vm_guest_tools_running_status': GaugeMetricFamily(
                 'vmware_vm_guest_tools_running_status',
                 'VM tools running status',
@@ -265,35 +273,35 @@ class VmwareCollector():
                 'vmware_host_hardware_info',
                 'A metric with a constant "1" value labeled by model and cpu model from the host.',
                 labels=self._labelNames['hosts'] + ['hardware_model', 'hardware_cpu_model']),
-            'vmware_host_sensor_state': GaugeMetricFamily(
-                'vmware_host_sensor_state',
-                'VMWare sensor state value (0=red / 1=yellow / 2=green / 3=unknown) labeled by sensor name and type '
-                'from the host.',
-                labels=self._labelNames['hosts'] + ['name', 'type']),
-            'vmware_host_sensor_fan': GaugeMetricFamily(
-                'vmware_host_sensor_fan',
-                'VMWare sensor fan speed value in RPM labeled by sensor name from the host.',
-                labels=self._labelNames['hosts'] + ['name']),
-            'vmware_host_sensor_temperature': GaugeMetricFamily(
-                'vmware_host_sensor_temperature',
-                'VMWare sensor temperature value in degree C labeled by sensor name from the host.',
-                labels=self._labelNames['hosts'] + ['name']),
-            'vmware_host_sensor_power_voltage': GaugeMetricFamily(
-                'vmware_host_sensor_power_voltage',
-                'VMWare sensor power voltage value in volt labeled by sensor name from the host.',
-                labels=self._labelNames['hosts'] + ['name']),
-            'vmware_host_sensor_power_current': GaugeMetricFamily(
-                'vmware_host_sensor_power_current',
-                'VMWare sensor power current value in amp labeled by sensor name from the host.',
-                labels=self._labelNames['hosts'] + ['name']),
-            'vmware_host_sensor_power_watt': GaugeMetricFamily(
-                'vmware_host_sensor_power_watt',
-                'VMWare sensor power watt value in watt labeled by sensor name from the host.',
-                labels=self._labelNames['hosts'] + ['name']),
-            'vmware_host_sensor_redundancy': GaugeMetricFamily(
-                'vmware_host_sensor_redundancy',
-                'VMWare sensor redundancy value (1=ok / 0=ko) labeled by sensor name from the host.',
-                labels=self._labelNames['hosts'] + ['name']),
+            # 'vmware_host_sensor_state': GaugeMetricFamily(
+            #     'vmware_host_sensor_state',
+            #     'VMWare sensor state value (0=red / 1=yellow / 2=green / 3=unknown) labeled by sensor name and type '
+            #     'from the host.',
+            #     labels=self._labelNames['hosts'] + ['name', 'type']),
+            # 'vmware_host_sensor_fan': GaugeMetricFamily(
+            #     'vmware_host_sensor_fan',
+            #     'VMWare sensor fan speed value in RPM labeled by sensor name from the host.',
+            #     labels=self._labelNames['hosts'] + ['name']),
+            # 'vmware_host_sensor_temperature': GaugeMetricFamily(
+            #     'vmware_host_sensor_temperature',
+            #     'VMWare sensor temperature value in degree C labeled by sensor name from the host.',
+            #     labels=self._labelNames['hosts'] + ['name']),
+            # 'vmware_host_sensor_power_voltage': GaugeMetricFamily(
+            #     'vmware_host_sensor_power_voltage',
+            #     'VMWare sensor power voltage value in volt labeled by sensor name from the host.',
+            #     labels=self._labelNames['hosts'] + ['name']),
+            # 'vmware_host_sensor_power_current': GaugeMetricFamily(
+            #     'vmware_host_sensor_power_current',
+            #     'VMWare sensor power current value in amp labeled by sensor name from the host.',
+            #     labels=self._labelNames['hosts'] + ['name']),
+            # 'vmware_host_sensor_power_watt': GaugeMetricFamily(
+            #     'vmware_host_sensor_power_watt',
+            #     'VMWare sensor power watt value in watt labeled by sensor name from the host.',
+            #     labels=self._labelNames['hosts'] + ['name']),
+            # 'vmware_host_sensor_redundancy': GaugeMetricFamily(
+            #     'vmware_host_sensor_redundancy',
+            #     'VMWare sensor redundancy value (1=ok / 0=ko) labeled by sensor name from the host.',
+            #     labels=self._labelNames['hosts'] + ['name']),
         }
 
         """
@@ -343,14 +351,12 @@ class VmwareCollector():
                 {
                     'vmware_vm_yellow_alarms': GaugeMetricFamily(
                         'vmware_vm_yellow_alarms',
-                        'A metric with the amount of virtual machine yellow alarms and \
-                                labeled with the list of alarm names',
+                        'A metric with the amount of virtual machine yellow alarms and labeled with the list of alarm names',
                         labels=self._labelNames['vms'] + ['alarms']
                     ),
                     'vmware_vm_red_alarms': GaugeMetricFamily(
                         'vmware_vm_red_alarms',
-                        'A metric with the amount of virtual machine red alarms and \
-                                labeled with the list of alarm names',
+                        'A metric with the amount of virtual machine red alarms and labeled with the list of alarm names',
                         labels=self._labelNames['vms'] + ['alarms']
                     )
                 }
@@ -359,14 +365,12 @@ class VmwareCollector():
                 {
                     'vmware_vm_yellow_alarms': GaugeMetricFamily(
                         'vmware_vm_yellow_alarms',
-                        'A metric with the amount of virtual machine yellow alarms and \
-                                labeled with the list of alarm names',
+                        'A metric with the amount of virtual machine yellow alarms and labeled with the list of alarm names',
                         labels=self._labelNames['vms'] + ['alarms']
                     ),
                     'vmware_vm_red_alarms': GaugeMetricFamily(
                         'vmware_vm_red_alarms',
-                        'A metric with the amount of virtual machine red alarms and \
-                                labeled with the list of alarm names',
+                        'A metric with the amount of virtual machine red alarms and labeled with the list of alarm names',
                         labels=self._labelNames['vms'] + ['alarms']
                     )
                 }
@@ -375,14 +379,12 @@ class VmwareCollector():
                 {
                     'vmware_vm_yellow_alarms': GaugeMetricFamily(
                         'vmware_vm_yellow_alarms',
-                        'A metric with the amount of virtual machine yellow alarms and \
-                                labeled with the list of alarm names',
+                        'A metric with the amount of virtual machine yellow alarms and labeled with the list of alarm names',
                         labels=self._labelNames['vms'] + ['alarms']
                     ),
                     'vmware_vm_red_alarms': GaugeMetricFamily(
                         'vmware_vm_red_alarms',
-                        'A metric with the amount of virtual machine red alarms and \
-                                labeled with the list of alarm names',
+                        'A metric with the amount of virtual machine red alarms and labeled with the list of alarm names',
                         labels=self._labelNames['vms'] + ['alarms']
                     )
                 }
@@ -426,6 +428,10 @@ class VmwareCollector():
         if collect_only['hosts'] is True:
             tasks.append(self._vmware_get_hosts(metrics))
             tasks.append(self._vmware_get_host_perf_manager_metrics(metrics))
+            tasks.append(self._vmware_get_host_perf_storage_metrics(metrics))
+            tasks.append(self._vmware_get_host_perf_datastore_metrics(metrics))
+            tasks.append(self._vmware_get_host_perf_adapter_metrics(metrics))
+            tasks.append(self._vmware_get_host_perf_network_metrics(metrics))
 
         yield parallelize(*tasks)
 
@@ -1322,6 +1328,7 @@ class VmwareCollector():
         # List of performance counter we want
         perf_list = [
             'cpu.ready.summation',
+            'cpu.readiness.average',
             'cpu.maxlimited.summation',
             'cpu.usage.average',
             'cpu.usagemhz.average',
@@ -1339,10 +1346,10 @@ class VmwareCollector():
             'disk.write.average',
             'net.received.average',
             'net.transmitted.average',
-            'net.multicastRx.summation',
-            'net.multicastTx.summation',
-            'net.broadcastTx.summation',
-            'net.broadcastRx.summation',
+            # 'net.multicastRx.summation',
+            # 'net.multicastTx.summation',
+            # 'net.broadcastTx.summation',
+            # 'net.broadcastRx.summation',
             'net.droppedRx.summation',
             'net.droppedTx.summation',
         ]
@@ -1423,6 +1430,8 @@ class VmwareCollector():
             'cpu.used.summation',
             'disk.read.average',
             'disk.write.average',
+            'disk.deviceReadLatency.average',
+            'disk.deviceWriteLatency.average',
             'mem.active.average',
             'mem.latency.average',
             'mem.swapin.average',
@@ -1430,13 +1439,6 @@ class VmwareCollector():
             'mem.swapout.average',
             'mem.swapoutRate.average',
             'mem.vmmemctl.average',
-            'net.bytesRx.average',
-            'net.bytesTx.average',
-            'net.droppedRx.summation',
-            'net.droppedTx.summation',
-            'net.errorsRx.summation',
-            'net.errorsTx.summation',
-            'net.usage.average',
         ]
 
         # Prepare gauges
@@ -1489,6 +1491,366 @@ class VmwareCollector():
                     )
 
         logging.info('FIN: _vmware_get_host_perf_manager_metrics')
+
+    @defer.inlineCallbacks
+    def _vmware_get_host_perf_storage_metrics(self, host_metrics):
+        logging.info('START: _vmware_get_host_perf_storage_metrics')
+
+        host_systems, counter_info = yield parallelize(self.host_system_inventory, self.counter_ids)
+
+        # List of performance counter we want
+        perf_list = [
+            # 'disk.deviceReadLatency.average',
+            # 'disk.deviceWriteLatency.average',
+            # 'disk.deviceLatency.average',
+            # 'storagePath.read.average',
+            # 'storagePath.write.average',
+            # 'storagePath.totalReadLatency.average',
+            # 'storagePath.totalWriteLatency.average',
+            # 'datastore.read.average',
+            # 'datastore.write.average',
+            # 'storageAdapter.totalReadLatency.average',
+            # 'storageAdapter.totalWriteLatency.average',
+            # 'datastore.datastoreNormalReadLatency.latest',
+            # 'datastore.datastoreNormalWriteLatency.latest',
+            'storageAdapter.queueDepth.average'
+        ]
+
+        # logging.info("Prometheus metrics[before]: {metrics}".format(metrics=host_metrics))
+
+ #       logging.info("Preparing gauges")
+        # Prepare gauges
+        for p in perf_list:
+            p_metric = 'vmware_host_' + p.replace('.', '_')
+            host_metrics[p_metric] = GaugeMetricFamily(
+                p_metric,
+                p_metric,
+                labels=self._labelNames['host_perf_storage'])
+            self._metricNames['host_perf_storage'].append(p_metric)
+
+        # logging.info("Listing out metrics in the host_metrics[] array")
+        # for item in host_metrics:
+        #     print("{name}: {value}".format(name=item, value=vars(host_metrics[item])))
+        # # logging.info("Metric names: {name}".format(name=self._metricNames['host_perf_storage']))
+
+        metrics = []
+        metric_names = {}
+        for perf_metric in perf_list:
+            perf_metric_name = 'vmware_host_' + perf_metric.replace('.', '_')
+            counter_key = counter_info[perf_metric]
+            metrics.append(vim.PerformanceManager.MetricId(
+            counterId=counter_key,
+            instance='*'
+            ))
+            metric_names[counter_key] = perf_metric_name
+
+        # logging.info("Metric names: {names}".format(names=metric_names))
+
+        # Insert custom attributes names as metric labels
+        self.updateMetricsLabelNames(host_metrics, ['host_perf_storage'])
+        # for item in host_metrics:
+        #     print("{name}: {value}".format(name=item, value=vars(host_metrics[item])))
+
+        specs = []
+        for host in host_systems.values():
+            if host.get('runtime.powerState') != 'poweredOn':
+                continue
+            specs.append(vim.PerformanceManager.QuerySpec(
+                maxSample=1,
+                entity=host['obj'],
+                metricId=metrics,
+                intervalId=20
+            ))
+
+        # logging.info("Specs are: {specs}".format(specs=specs))
+        content = yield self.content
+
+        if len(specs) > 0:
+            results, labels = yield parallelize(
+                threads.deferToThread(content.perfManager.QueryStats, querySpec=specs),
+                self.host_labels,
+            )
+
+            # logging.info("Labels: {labels}".format(labels=labels))
+
+            # logging.info("results: {results}".format(results=results))
+            for ent in results:
+                for metric in ent.value:
+                    # logging.info("{hostname}: {name} {value}".format(hostname=ent.entity._moId, name=metric_names[metric.id.counterId], value=metric.value))
+                    # logging.info("{hostname}: {labels}".format(hostname=ent.entity._moId, labels=labels[ent.entity._moId]))
+                    # logging.info("{hostname}: {lun}".format(hostname=ent.entity._moId, lun=metric.id.instance))
+                    host_metrics[metric_names[metric.id.counterId]].add_metric(
+                        labels[ent.entity._moId] + [metric.id.instance],
+                        float(sum(metric.value)),
+                    )
+
+        logging.info('FIN: _vmware_get_host_perf_storage_metrics')
+
+
+    @defer.inlineCallbacks
+    def _vmware_get_host_perf_datastore_metrics(self, host_metrics):
+        logging.info('START: _vmware_get_host_perf_datastore_metrics')
+
+        host_systems, counter_info = yield parallelize(self.host_system_inventory, self.counter_ids)
+
+        # List of performance counter we want
+        perf_list = [
+            # 'datastore.read.average',
+            # 'datastore.write.average',
+            # 'storageAdapter.totalReadLatency.average',
+            # 'storageAdapter.totalWriteLatency.average',
+            # 'datastore.datastoreNormalReadLatency.latest',
+            # 'datastore.datastoreNormalWriteLatency.latest',
+            'storageAdapter.queueDepth.average'
+        ]
+
+        # logging.info("Prometheus metrics[before]: {metrics}".format(metrics=host_metrics))
+
+ #       logging.info("Preparing gauges")
+        # Prepare gauges
+        for p in perf_list:
+            p_metric = 'vmware_host_' + p.replace('.', '_')
+            host_metrics[p_metric] = GaugeMetricFamily(
+                p_metric,
+                p_metric,
+                labels=self._labelNames['host_perf_datastore'])
+            self._metricNames['host_perf_datastore'].append(p_metric)
+
+        # logging.info("Listing out metrics in the host_metrics[] array")
+        # for item in host_metrics:
+        #     print("{name}: {value}".format(name=item, value=vars(host_metrics[item])))
+        # # logging.info("Metric names: {name}".format(name=self._metricNames['host_perf_storage']))
+
+        metrics = []
+        metric_names = {}
+        for perf_metric in perf_list:
+            perf_metric_name = 'vmware_host_' + perf_metric.replace('.', '_')
+            counter_key = counter_info[perf_metric]
+            metrics.append(vim.PerformanceManager.MetricId(
+            counterId=counter_key,
+            instance='*'
+            ))
+            metric_names[counter_key] = perf_metric_name
+
+        # logging.info("Metric names: {names}".format(names=metric_names))
+
+        # Insert custom attributes names as metric labels
+        self.updateMetricsLabelNames(host_metrics, ['host_perf_datastore'])
+        # for item in host_metrics:
+        #     print("{name}: {value}".format(name=item, value=vars(host_metrics[item])))
+
+        specs = []
+        for host in host_systems.values():
+            if host.get('runtime.powerState') != 'poweredOn':
+                continue
+            specs.append(vim.PerformanceManager.QuerySpec(
+                maxSample=1,
+                entity=host['obj'],
+                metricId=metrics,
+                intervalId=20
+            ))
+
+        # logging.info("Specs are: {specs}".format(specs=specs))
+        content = yield self.content
+
+        if len(specs) > 0:
+            results, labels = yield parallelize(
+                threads.deferToThread(content.perfManager.QueryStats, querySpec=specs),
+                self.host_labels,
+            )
+
+            # logging.info("Labels: {labels}".format(labels=labels))
+
+            # logging.info("results: {results}".format(results=results))
+            for ent in results:
+                for metric in ent.value:
+                    # logging.info("{hostname}: {name} {value}".format(hostname=ent.entity._moId, name=metric_names[metric.id.counterId], value=metric.value))
+                    # logging.info("{hostname}: {labels}".format(hostname=ent.entity._moId, labels=labels[ent.entity._moId]))
+                    # logging.info("{hostname}: {lun}".format(hostname=ent.entity._moId, lun=metric.id.instance))
+                    host_metrics[metric_names[metric.id.counterId]].add_metric(
+                        labels[ent.entity._moId] + [metric.id.instance],
+                        float(sum(metric.value)),
+                    )
+
+        logging.info('FIN: _vmware_get_host_perf_datastore_metrics')
+
+    @defer.inlineCallbacks
+    def _vmware_get_host_perf_adapter_metrics(self, host_metrics):
+        logging.info('START: _vmware_get_host_perf_adapter_metrics')
+
+        host_systems, counter_info = yield parallelize(self.host_system_inventory, self.counter_ids)
+
+        # List of performance counter we want
+        perf_list = [
+            # 'storageAdapter.totalReadLatency.average',
+            # 'storageAdapter.totalWriteLatency.average',
+            # 'storageAdapter.queueDepth.average',
+            # 'storageAdapter.queueDepth.latest',
+            # 'storageAdapter.queued.latest',
+            # 'storageAdapter.read.average',
+            # 'storageAdapter.write.average',
+            # 'storageAdapter.maxTotalLatency.latest',
+            # 'storageAdapter.throughput.cont.average',
+            # 'storageAdapter.throughput.usag.average',
+            # 'storageAdapter.outstandingIOs.average',
+            'storageAdapter.queueLatency.average',
+        ]
+
+        # logging.info("Prometheus metrics[before]: {metrics}".format(metrics=host_metrics))
+
+ #       logging.info("Preparing gauges")
+        # Prepare gauges
+        for p in perf_list:
+            p_metric = 'vmware_host_' + p.replace('.', '_')
+            host_metrics[p_metric] = GaugeMetricFamily(
+                p_metric,
+                p_metric,
+                labels=self._labelNames['host_perf_adapter'])
+            self._metricNames['host_perf_adapter'].append(p_metric)
+
+        # logging.info("Listing out metrics in the host_metrics[] array")
+        # for item in host_metrics:
+        #     print("{name}: {value}".format(name=item, value=vars(host_metrics[item])))
+        # # logging.info("Metric names: {name}".format(name=self._metricNames['host_perf_storage']))
+
+        metrics = []
+        metric_names = {}
+        for perf_metric in perf_list:
+            perf_metric_name = 'vmware_host_' + perf_metric.replace('.', '_')
+            counter_key = counter_info[perf_metric]
+            metrics.append(vim.PerformanceManager.MetricId(
+            counterId=counter_key,
+            instance='*'
+            ))
+            metric_names[counter_key] = perf_metric_name
+
+        # logging.info("Metric names: {names}".format(names=metric_names))
+
+        # Insert custom attributes names as metric labels
+        self.updateMetricsLabelNames(host_metrics, ['host_perf_adapter'])
+        # for item in host_metrics:
+        #     print("{name}: {value}".format(name=item, value=vars(host_metrics[item])))
+
+        specs = []
+        for host in host_systems.values():
+            if host.get('runtime.powerState') != 'poweredOn':
+                continue
+            specs.append(vim.PerformanceManager.QuerySpec(
+                maxSample=1,
+                entity=host['obj'],
+                metricId=metrics,
+                intervalId=20
+            ))
+
+        # logging.info("Specs are: {specs}".format(specs=specs))
+        content = yield self.content
+
+        if len(specs) > 0:
+            results, labels = yield parallelize(
+                threads.deferToThread(content.perfManager.QueryStats, querySpec=specs),
+                self.host_labels,
+            )
+
+            # logging.info("Labels: {labels}".format(labels=labels))
+
+            # logging.info("results: {results}".format(results=results))
+            for ent in results:
+                for metric in ent.value:
+                    # logging.info("{hostname}: {name} {value}".format(hostname=ent.entity._moId, name=metric_names[metric.id.counterId], value=metric.value))
+                    # logging.info("{hostname}: {labels}".format(hostname=ent.entity._moId, labels=labels[ent.entity._moId]))
+                    # logging.info("{hostname}: {lun}".format(hostname=ent.entity._moId, lun=metric.id.instance))
+                    host_metrics[metric_names[metric.id.counterId]].add_metric(
+                        labels[ent.entity._moId] + [metric.id.instance],
+                        float(sum(metric.value)),
+                    )
+
+        logging.info('FIN: _vmware_get_host_perf_adapter_metrics')
+
+    @defer.inlineCallbacks
+    def _vmware_get_host_perf_network_metrics(self, host_metrics):
+        logging.info('START: _vmware_get_host_perf_network_metrics')
+
+        host_systems, counter_info = yield parallelize(self.host_system_inventory, self.counter_ids)
+
+        # List of performance counter we want
+        perf_list = [
+            'net.bytesRx.average',
+            'net.bytesTx.average',
+            'net.droppedRx.summation',
+            'net.droppedTx.summation',
+            'net.errorsRx.summation',
+            'net.errorsTx.summation',
+        ]
+
+        # logging.info("Prometheus metrics[before]: {metrics}".format(metrics=host_metrics))
+
+ #       logging.info("Preparing gauges")
+        # Prepare gauges
+        for p in perf_list:
+            p_metric = 'vmware_host_' + p.replace('.', '_')
+            host_metrics[p_metric] = GaugeMetricFamily(
+                p_metric,
+                p_metric,
+                labels=self._labelNames['host_perf_network'])
+            self._metricNames['host_perf_network'].append(p_metric)
+
+        # logging.info("Listing out metrics in the host_metrics[] array")
+        # for item in host_metrics:
+        #     print("{name}: {value}".format(name=item, value=vars(host_metrics[item])))
+        # # logging.info("Metric names: {name}".format(name=self._metricNames['host_perf_storage']))
+
+        metrics = []
+        metric_names = {}
+        for perf_metric in perf_list:
+            perf_metric_name = 'vmware_host_' + perf_metric.replace('.', '_')
+            counter_key = counter_info[perf_metric]
+            metrics.append(vim.PerformanceManager.MetricId(
+            counterId=counter_key,
+            instance='*'
+            ))
+            metric_names[counter_key] = perf_metric_name
+
+        # logging.info("Metric names: {names}".format(names=metric_names))
+
+        # Insert custom attributes names as metric labels
+        self.updateMetricsLabelNames(host_metrics, ['host_perf_network'])
+        # for item in host_metrics:
+        #     print("{name}: {value}".format(name=item, value=vars(host_metrics[item])))
+
+        specs = []
+        for host in host_systems.values():
+            if host.get('runtime.powerState') != 'poweredOn':
+                continue
+            specs.append(vim.PerformanceManager.QuerySpec(
+                maxSample=1,
+                entity=host['obj'],
+                metricId=metrics,
+                intervalId=20
+            ))
+
+        # logging.info("Specs are: {specs}".format(specs=specs))
+        content = yield self.content
+
+        if len(specs) > 0:
+            results, labels = yield parallelize(
+                threads.deferToThread(content.perfManager.QueryStats, querySpec=specs),
+                self.host_labels,
+            )
+
+            # logging.info("Labels: {labels}".format(labels=labels))
+
+            # logging.info("results: {results}".format(results=results))
+            for ent in results:
+                for metric in ent.value:
+                    # logging.info("{hostname}: {name} {value}".format(hostname=ent.entity._moId, name=metric_names[metric.id.counterId], value=metric.value))
+                    # logging.info("{hostname}: {labels}".format(hostname=ent.entity._moId, labels=labels[ent.entity._moId]))
+                    # logging.info("{hostname}: {lun}".format(hostname=ent.entity._moId, lun=metric.id.instance))
+                    host_metrics[metric_names[metric.id.counterId]].add_metric(
+                        labels[ent.entity._moId] + [metric.id.instance],
+                        float(sum(metric.value)),
+                    )
+
+        logging.info('FIN: _vmware_get_host_perf_network_metrics')
 
     @defer.inlineCallbacks
     def _vmware_get_vms(self, metrics):
@@ -1584,14 +1946,14 @@ class VmwareCollector():
             if 'summary.config.template' in row:
                 metrics['vmware_vm_template'].add_metric(labels, row['summary.config.template'])
 
-            if 'guest.disk' in row and len(row['guest.disk']) > 0:
-                for disk in row['guest.disk']:
-                    metrics['vmware_vm_guest_disk_free'].add_metric(
-                        labels + [disk.diskPath], disk.freeSpace
-                    )
-                    metrics['vmware_vm_guest_disk_capacity'].add_metric(
-                        labels + [disk.diskPath], disk.capacity
-                    )
+            # if 'guest.disk' in row and len(row['guest.disk']) > 0:
+            #     for disk in row['guest.disk']:
+            #         metrics['vmware_vm_guest_disk_free'].add_metric(
+            #             labels + [disk.diskPath], disk.freeSpace
+            #         )
+            #         metrics['vmware_vm_guest_disk_capacity'].add_metric(
+            #             labels + [disk.diskPath], disk.capacity
+            #         )
 
             if 'guest.toolsStatus' in row:
                 metrics['vmware_vm_guest_tools_running_status'].add_metric(
@@ -1719,52 +2081,52 @@ class VmwareCollector():
                     'unknown': 3,
                 }[sensor['sensorStatus'].lower()]
 
-                host_metrics['vmware_host_sensor_state'].add_metric(
-                    labels + [sensor['name'], sensor['type']],
-                    sensor_status
-                )
+                # host_metrics['vmware_host_sensor_state'].add_metric(
+                #     labels + [sensor['name'], sensor['type']],
+                #     sensor_status
+                # )
 
                 # FAN speed
-                if sensor["unit"] == 'rpm':
-                    host_metrics['vmware_host_sensor_fan'].add_metric(
-                        labels + [sensor['name']],
-                        int(sensor['value']) * (10 ** (int(sensor['unitModifier'])))
-                    )
+                # if sensor["unit"] == 'rpm':
+                #     host_metrics['vmware_host_sensor_fan'].add_metric(
+                #         labels + [sensor['name']],
+                #         int(sensor['value']) * (10 ** (int(sensor['unitModifier'])))
+                #     )
 
                 # Temperature
-                if sensor["unit"] == 'degrees c':
-                    host_metrics['vmware_host_sensor_temperature'].add_metric(
-                        labels + [sensor['name']],
-                        int(sensor['value']) * (10 ** (int(sensor['unitModifier'])))
-                    )
+                # if sensor["unit"] == 'degrees c':
+                #     host_metrics['vmware_host_sensor_temperature'].add_metric(
+                #         labels + [sensor['name']],
+                #         int(sensor['value']) * (10 ** (int(sensor['unitModifier'])))
+                #     )
 
                 # Power Voltage
-                if sensor["unit"] == 'volts':
-                    host_metrics['vmware_host_sensor_power_voltage'].add_metric(
-                        labels + [sensor['name']],
-                        int(sensor['value']) * (10 ** (int(sensor['unitModifier'])))
-                    )
+                # if sensor["unit"] == 'volts':
+                #     host_metrics['vmware_host_sensor_power_voltage'].add_metric(
+                #         labels + [sensor['name']],
+                #         int(sensor['value']) * (10 ** (int(sensor['unitModifier'])))
+                #     )
 
                 # Power Current
-                if sensor["unit"] == 'amps':
-                    host_metrics['vmware_host_sensor_power_current'].add_metric(
-                        labels + [sensor['name']],
-                        int(sensor['value']) * (10 ** (int(sensor['unitModifier'])))
-                    )
+                # if sensor["unit"] == 'amps':
+                #     host_metrics['vmware_host_sensor_power_current'].add_metric(
+                #         labels + [sensor['name']],
+                #         int(sensor['value']) * (10 ** (int(sensor['unitModifier'])))
+                #     )
 
                 # Power Watt
-                if sensor["unit"] == 'watts':
-                    host_metrics['vmware_host_sensor_power_watt'].add_metric(
-                        labels + [sensor['name']],
-                        int(sensor['value']) * (10 ** (int(sensor['unitModifier'])))
-                    )
+                # if sensor["unit"] == 'watts':
+                #     host_metrics['vmware_host_sensor_power_watt'].add_metric(
+                #         labels + [sensor['name']],
+                #         int(sensor['value']) * (10 ** (int(sensor['unitModifier'])))
+                #     )
 
                 # Redundancy
-                if sensor["unit"] == 'redundancy-discrete':
-                    host_metrics['vmware_host_sensor_redundancy'].add_metric(
-                        labels + [sensor['name']],
-                        int(sensor['value'])
-                    )
+                # if sensor["unit"] == 'redundancy-discrete':
+                #     host_metrics['vmware_host_sensor_redundancy'].add_metric(
+                #         labels + [sensor['name']],
+                #         int(sensor['value'])
+                #     )
 
             # Standby Mode
             standby_mode = 1 if host.get('runtime.standbyMode') == 'in' else 0
