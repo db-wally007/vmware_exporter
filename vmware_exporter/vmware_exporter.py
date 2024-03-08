@@ -1341,9 +1341,6 @@ class VmwareCollector():
             'mem.swapped.average',
             'mem.vmmemctl.average',
             'disk.maxTotalLatency.latest',
-            'disk.usage.average',
-            'disk.read.average',
-            'disk.write.average',
             'net.received.average',
             'net.transmitted.average',
             # 'net.multicastRx.summation',
@@ -1352,6 +1349,8 @@ class VmwareCollector():
             # 'net.broadcastRx.summation',
             'net.droppedRx.summation',
             'net.droppedTx.summation',
+            'virtualDisk.read.average',
+            'virtualDisk.write.average',
         ]
 
         # Prepare gauges
@@ -1430,8 +1429,6 @@ class VmwareCollector():
             'cpu.used.summation',
             'disk.read.average',
             'disk.write.average',
-            'disk.deviceReadLatency.average',
-            'disk.deviceWriteLatency.average',
             'mem.active.average',
             'mem.latency.average',
             'mem.swapin.average',
