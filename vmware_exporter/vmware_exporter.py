@@ -72,6 +72,12 @@ stderr_handler.setFormatter(formatter)
 logger.addHandler(stdout_handler)
 logger.addHandler(stderr_handler)
 
+## Uncomment the following lines to send DEBUG messages to stdout ##
+# debug_handler = logging.StreamHandler(sys.stdout)
+# debug_handler.setLevel(logging.DEBUG)
+# debug_handler.setFormatter(formatter)
+# logger.addHandler(debug_handler)
+
 class VmwareCollector():
 
     def __init__(
@@ -684,7 +690,7 @@ class VmwareCollector():
             )
 
         fetch_time = datetime.datetime.utcnow() - start
-        logging.info("Fetched vim.Datastore inventory ({fetch_time})".format(fetch_time=fetch_time))
+        logging.debug("Fetched vim.Datastore inventory ({fetch_time})".format(fetch_time=fetch_time))
 
         return datastores
 
@@ -757,7 +763,7 @@ class VmwareCollector():
     @run_once_property
     @defer.inlineCallbacks
     def vm_inventory(self):
-        logging.info("Fetching vim.VirtualMachine inventory")
+        logging.debug("Fetching vim.VirtualMachine inventory")
         start = datetime.datetime.utcnow()
         properties = [
             'name',
@@ -819,7 +825,7 @@ class VmwareCollector():
             )
 
         fetch_time = datetime.datetime.utcnow() - start
-        logging.info("Fetched vim.VirtualMachine inventory ({fetch_time})".format(fetch_time=fetch_time))
+        logging.debug("Fetched vim.VirtualMachine inventory ({fetch_time})".format(fetch_time=fetch_time))
 
         return virtual_machines
 
@@ -1140,7 +1146,7 @@ class VmwareCollector():
                 labels_cnt += 1
 
             if labels_cnt < len(self._labelNames['vms']):
-                logging.info(
+                logging.debug(
                     "Only ${cnt}/{expected} labels (vm, host, dc, cluster) found, filling n/a"
                     .format(
                         cnt=labels_cnt,
@@ -1278,7 +1284,7 @@ class VmwareCollector():
                 labels += customLabels
 
             except KeyError as e:
-                logging.info(
+                logging.error(
                     "Key error, unable to register datastore {error}, datastores are {datastore_labels}".format(
                         error=e, datastore_labels=datastore_labels
                     )
@@ -1341,7 +1347,7 @@ class VmwareCollector():
 
     @defer.inlineCallbacks
     def _vmware_get_vm_perf_manager_metrics(self, vm_metrics):
-        logging.info('START: _vmware_get_vm_perf_manager_metrics')
+        logging.debug('START: _vmware_get_vm_perf_manager_metrics')
 
         virtual_machines, counter_info = yield parallelize(self.vm_inventory, self.counter_ids)
 
@@ -1429,11 +1435,11 @@ class VmwareCollector():
                             float(sum(metric.value)),
                         )
 
-        logging.info('FIN: _vmware_get_vm_perf_manager_metrics')
+        logging.debug('FIN: _vmware_get_vm_perf_manager_metrics')
 
     @defer.inlineCallbacks
     def _vmware_get_host_perf_manager_metrics(self, host_metrics):
-        logging.info('START: _vmware_get_host_perf_manager_metrics')
+        logging.debug('START: _vmware_get_host_perf_manager_metrics')
 
         host_systems, counter_info = yield parallelize(self.host_system_inventory, self.counter_ids)
 
@@ -1507,11 +1513,11 @@ class VmwareCollector():
                         float(sum(metric.value)),
                     )
 
-        logging.info('FIN: _vmware_get_host_perf_manager_metrics')
+        logging.debug('FIN: _vmware_get_host_perf_manager_metrics')
 
     @defer.inlineCallbacks
     def _vmware_get_host_perf_storage_metrics(self, host_metrics):
-        logging.info('START: _vmware_get_host_perf_storage_metrics')
+        logging.debug('START: _vmware_get_host_perf_storage_metrics')
 
         host_systems, counter_info = yield parallelize(self.host_system_inventory, self.counter_ids)
 
@@ -1533,9 +1539,9 @@ class VmwareCollector():
             'storageAdapter.queueDepth.average'
         ]
 
-        # logging.info("Prometheus metrics[before]: {metrics}".format(metrics=host_metrics))
+        # logging.debug("Prometheus metrics[before]: {metrics}".format(metrics=host_metrics))
 
- #       logging.info("Preparing gauges")
+ #       logging.debug("Preparing gauges")
         # Prepare gauges
         for p in perf_list:
             p_metric = 'vmware_host_' + p.replace('.', '_')
@@ -1545,10 +1551,10 @@ class VmwareCollector():
                 labels=self._labelNames['host_perf_storage'])
             self._metricNames['host_perf_storage'].append(p_metric)
 
-        # logging.info("Listing out metrics in the host_metrics[] array")
+        # logging.debug("Listing out metrics in the host_metrics[] array")
         # for item in host_metrics:
         #     print("{name}: {value}".format(name=item, value=vars(host_metrics[item])))
-        # # logging.info("Metric names: {name}".format(name=self._metricNames['host_perf_storage']))
+        # # logging.debug("Metric names: {name}".format(name=self._metricNames['host_perf_storage']))
 
         metrics = []
         metric_names = {}
@@ -1561,7 +1567,7 @@ class VmwareCollector():
             ))
             metric_names[counter_key] = perf_metric_name
 
-        # logging.info("Metric names: {names}".format(names=metric_names))
+        # logging.debug("Metric names: {names}".format(names=metric_names))
 
         # Insert custom attributes names as metric labels
         self.updateMetricsLabelNames(host_metrics, ['host_perf_storage'])
@@ -1579,7 +1585,7 @@ class VmwareCollector():
                 intervalId=20
             ))
 
-        # logging.info("Specs are: {specs}".format(specs=specs))
+        # logging.debug("Specs are: {specs}".format(specs=specs))
         content = yield self.content
 
         if len(specs) > 0:
@@ -1588,25 +1594,25 @@ class VmwareCollector():
                 self.host_labels,
             )
 
-            # logging.info("Labels: {labels}".format(labels=labels))
+            # logging.debug("Labels: {labels}".format(labels=labels))
 
-            # logging.info("results: {results}".format(results=results))
+            # logging.debug("results: {results}".format(results=results))
             for ent in results:
                 for metric in ent.value:
-                    # logging.info("{hostname}: {name} {value}".format(hostname=ent.entity._moId, name=metric_names[metric.id.counterId], value=metric.value))
-                    # logging.info("{hostname}: {labels}".format(hostname=ent.entity._moId, labels=labels[ent.entity._moId]))
-                    # logging.info("{hostname}: {lun}".format(hostname=ent.entity._moId, lun=metric.id.instance))
+                    # logging.debug("{hostname}: {name} {value}".format(hostname=ent.entity._moId, name=metric_names[metric.id.counterId], value=metric.value))
+                    # logging.debug("{hostname}: {labels}".format(hostname=ent.entity._moId, labels=labels[ent.entity._moId]))
+                    # logging.debug("{hostname}: {lun}".format(hostname=ent.entity._moId, lun=metric.id.instance))
                     host_metrics[metric_names[metric.id.counterId]].add_metric(
                         labels[ent.entity._moId] + [metric.id.instance],
                         float(sum(metric.value)),
                     )
 
-        logging.info('FIN: _vmware_get_host_perf_storage_metrics')
+        logging.debug('FIN: _vmware_get_host_perf_storage_metrics')
 
 
     @defer.inlineCallbacks
     def _vmware_get_host_perf_datastore_metrics(self, host_metrics):
-        logging.info('START: _vmware_get_host_perf_datastore_metrics')
+        logging.debug('START: _vmware_get_host_perf_datastore_metrics')
 
         host_systems, counter_info = yield parallelize(self.host_system_inventory, self.counter_ids)
 
@@ -1621,9 +1627,9 @@ class VmwareCollector():
             'storageAdapter.queueDepth.average'
         ]
 
-        # logging.info("Prometheus metrics[before]: {metrics}".format(metrics=host_metrics))
+        # logging.debug("Prometheus metrics[before]: {metrics}".format(metrics=host_metrics))
 
- #       logging.info("Preparing gauges")
+ #       logging.debug("Preparing gauges")
         # Prepare gauges
         for p in perf_list:
             p_metric = 'vmware_host_' + p.replace('.', '_')
@@ -1633,10 +1639,10 @@ class VmwareCollector():
                 labels=self._labelNames['host_perf_datastore'])
             self._metricNames['host_perf_datastore'].append(p_metric)
 
-        # logging.info("Listing out metrics in the host_metrics[] array")
+        # logging.debug("Listing out metrics in the host_metrics[] array")
         # for item in host_metrics:
         #     print("{name}: {value}".format(name=item, value=vars(host_metrics[item])))
-        # # logging.info("Metric names: {name}".format(name=self._metricNames['host_perf_storage']))
+        # # logging.debug("Metric names: {name}".format(name=self._metricNames['host_perf_storage']))
 
         metrics = []
         metric_names = {}
@@ -1649,7 +1655,7 @@ class VmwareCollector():
             ))
             metric_names[counter_key] = perf_metric_name
 
-        # logging.info("Metric names: {names}".format(names=metric_names))
+        # logging.debug("Metric names: {names}".format(names=metric_names))
 
         # Insert custom attributes names as metric labels
         self.updateMetricsLabelNames(host_metrics, ['host_perf_datastore'])
@@ -1667,7 +1673,7 @@ class VmwareCollector():
                 intervalId=20
             ))
 
-        # logging.info("Specs are: {specs}".format(specs=specs))
+        # logging.debug("Specs are: {specs}".format(specs=specs))
         content = yield self.content
 
         if len(specs) > 0:
@@ -1676,24 +1682,24 @@ class VmwareCollector():
                 self.host_labels,
             )
 
-            # logging.info("Labels: {labels}".format(labels=labels))
+            # logging.debug("Labels: {labels}".format(labels=labels))
 
-            # logging.info("results: {results}".format(results=results))
+            # logging.debug("results: {results}".format(results=results))
             for ent in results:
                 for metric in ent.value:
-                    # logging.info("{hostname}: {name} {value}".format(hostname=ent.entity._moId, name=metric_names[metric.id.counterId], value=metric.value))
-                    # logging.info("{hostname}: {labels}".format(hostname=ent.entity._moId, labels=labels[ent.entity._moId]))
-                    # logging.info("{hostname}: {lun}".format(hostname=ent.entity._moId, lun=metric.id.instance))
+                    # logging.debug("{hostname}: {name} {value}".format(hostname=ent.entity._moId, name=metric_names[metric.id.counterId], value=metric.value))
+                    # logging.debug("{hostname}: {labels}".format(hostname=ent.entity._moId, labels=labels[ent.entity._moId]))
+                    # logging.debug("{hostname}: {lun}".format(hostname=ent.entity._moId, lun=metric.id.instance))
                     host_metrics[metric_names[metric.id.counterId]].add_metric(
                         labels[ent.entity._moId] + [metric.id.instance],
                         float(sum(metric.value)),
                     )
 
-        logging.info('FIN: _vmware_get_host_perf_datastore_metrics')
+        logging.debug('FIN: _vmware_get_host_perf_datastore_metrics')
 
     @defer.inlineCallbacks
     def _vmware_get_host_perf_adapter_metrics(self, host_metrics):
-        logging.info('START: _vmware_get_host_perf_adapter_metrics')
+        logging.debug('START: _vmware_get_host_perf_adapter_metrics')
 
         host_systems, counter_info = yield parallelize(self.host_system_inventory, self.counter_ids)
 
@@ -1713,9 +1719,9 @@ class VmwareCollector():
             'storageAdapter.queueLatency.average',
         ]
 
-        # logging.info("Prometheus metrics[before]: {metrics}".format(metrics=host_metrics))
+        # logging.debug("Prometheus metrics[before]: {metrics}".format(metrics=host_metrics))
 
- #       logging.info("Preparing gauges")
+ #       logging.debug("Preparing gauges")
         # Prepare gauges
         for p in perf_list:
             p_metric = 'vmware_host_' + p.replace('.', '_')
@@ -1725,10 +1731,10 @@ class VmwareCollector():
                 labels=self._labelNames['host_perf_adapter'])
             self._metricNames['host_perf_adapter'].append(p_metric)
 
-        # logging.info("Listing out metrics in the host_metrics[] array")
+        # logging.debug("Listing out metrics in the host_metrics[] array")
         # for item in host_metrics:
         #     print("{name}: {value}".format(name=item, value=vars(host_metrics[item])))
-        # # logging.info("Metric names: {name}".format(name=self._metricNames['host_perf_storage']))
+        # # logging.debug("Metric names: {name}".format(name=self._metricNames['host_perf_storage']))
 
         metrics = []
         metric_names = {}
@@ -1741,7 +1747,7 @@ class VmwareCollector():
             ))
             metric_names[counter_key] = perf_metric_name
 
-        # logging.info("Metric names: {names}".format(names=metric_names))
+        # logging.debug("Metric names: {names}".format(names=metric_names))
 
         # Insert custom attributes names as metric labels
         self.updateMetricsLabelNames(host_metrics, ['host_perf_adapter'])
@@ -1759,7 +1765,7 @@ class VmwareCollector():
                 intervalId=20
             ))
 
-        # logging.info("Specs are: {specs}".format(specs=specs))
+        # logging.debug("Specs are: {specs}".format(specs=specs))
         content = yield self.content
 
         if len(specs) > 0:
@@ -1768,24 +1774,24 @@ class VmwareCollector():
                 self.host_labels,
             )
 
-            # logging.info("Labels: {labels}".format(labels=labels))
+            # logging.debug("Labels: {labels}".format(labels=labels))
 
-            # logging.info("results: {results}".format(results=results))
+            # logging.debug("results: {results}".format(results=results))
             for ent in results:
                 for metric in ent.value:
-                    # logging.info("{hostname}: {name} {value}".format(hostname=ent.entity._moId, name=metric_names[metric.id.counterId], value=metric.value))
-                    # logging.info("{hostname}: {labels}".format(hostname=ent.entity._moId, labels=labels[ent.entity._moId]))
-                    # logging.info("{hostname}: {lun}".format(hostname=ent.entity._moId, lun=metric.id.instance))
+                    # logging.debug("{hostname}: {name} {value}".format(hostname=ent.entity._moId, name=metric_names[metric.id.counterId], value=metric.value))
+                    # logging.debug("{hostname}: {labels}".format(hostname=ent.entity._moId, labels=labels[ent.entity._moId]))
+                    # logging.debug("{hostname}: {lun}".format(hostname=ent.entity._moId, lun=metric.id.instance))
                     host_metrics[metric_names[metric.id.counterId]].add_metric(
                         labels[ent.entity._moId] + [metric.id.instance],
                         float(sum(metric.value)),
                     )
 
-        logging.info('FIN: _vmware_get_host_perf_adapter_metrics')
+        logging.debug('FIN: _vmware_get_host_perf_adapter_metrics')
 
     @defer.inlineCallbacks
     def _vmware_get_host_perf_network_metrics(self, host_metrics):
-        logging.info('START: _vmware_get_host_perf_network_metrics')
+        logging.debug('START: _vmware_get_host_perf_network_metrics')
 
         host_systems, counter_info = yield parallelize(self.host_system_inventory, self.counter_ids)
 
@@ -1799,9 +1805,9 @@ class VmwareCollector():
             'net.errorsTx.summation',
         ]
 
-        # logging.info("Prometheus metrics[before]: {metrics}".format(metrics=host_metrics))
+        # logging.debug("Prometheus metrics[before]: {metrics}".format(metrics=host_metrics))
 
- #       logging.info("Preparing gauges")
+ #       logging.debug("Preparing gauges")
         # Prepare gauges
         for p in perf_list:
             p_metric = 'vmware_host_' + p.replace('.', '_')
@@ -1811,10 +1817,10 @@ class VmwareCollector():
                 labels=self._labelNames['host_perf_network'])
             self._metricNames['host_perf_network'].append(p_metric)
 
-        # logging.info("Listing out metrics in the host_metrics[] array")
+        # logging.debug("Listing out metrics in the host_metrics[] array")
         # for item in host_metrics:
         #     print("{name}: {value}".format(name=item, value=vars(host_metrics[item])))
-        # # logging.info("Metric names: {name}".format(name=self._metricNames['host_perf_storage']))
+        # # logging.debug("Metric names: {name}".format(name=self._metricNames['host_perf_storage']))
 
         metrics = []
         metric_names = {}
@@ -1827,7 +1833,7 @@ class VmwareCollector():
             ))
             metric_names[counter_key] = perf_metric_name
 
-        # logging.info("Metric names: {names}".format(names=metric_names))
+        # logging.debug("Metric names: {names}".format(names=metric_names))
 
         # Insert custom attributes names as metric labels
         self.updateMetricsLabelNames(host_metrics, ['host_perf_network'])
@@ -1845,7 +1851,7 @@ class VmwareCollector():
                 intervalId=20
             ))
 
-        # logging.info("Specs are: {specs}".format(specs=specs))
+        # logging.debug("Specs are: {specs}".format(specs=specs))
         content = yield self.content
 
         if len(specs) > 0:
@@ -1854,27 +1860,27 @@ class VmwareCollector():
                 self.host_labels,
             )
 
-            # logging.info("Labels: {labels}".format(labels=labels))
+            # logging.debug("Labels: {labels}".format(labels=labels))
 
-            # logging.info("results: {results}".format(results=results))
+            # logging.debug("results: {results}".format(results=results))
             for ent in results:
                 for metric in ent.value:
-                    # logging.info("{hostname}: {name} {value}".format(hostname=ent.entity._moId, name=metric_names[metric.id.counterId], value=metric.value))
-                    # logging.info("{hostname}: {labels}".format(hostname=ent.entity._moId, labels=labels[ent.entity._moId]))
-                    # logging.info("{hostname}: {lun}".format(hostname=ent.entity._moId, lun=metric.id.instance))
+                    # logging.debug("{hostname}: {name} {value}".format(hostname=ent.entity._moId, name=metric_names[metric.id.counterId], value=metric.value))
+                    # logging.debug("{hostname}: {labels}".format(hostname=ent.entity._moId, labels=labels[ent.entity._moId]))
+                    # logging.debug("{hostname}: {lun}".format(hostname=ent.entity._moId, lun=metric.id.instance))
                     host_metrics[metric_names[metric.id.counterId]].add_metric(
                         labels[ent.entity._moId] + [metric.id.instance],
                         float(sum(metric.value)),
                     )
 
-        logging.info('FIN: _vmware_get_host_perf_network_metrics')
+        logging.debug('FIN: _vmware_get_host_perf_network_metrics')
 
     @defer.inlineCallbacks
     def _vmware_get_vms(self, metrics):
         """
         Get VM information
         """
-        logging.info("Starting vm metrics collection")
+        logging.debug("Starting vm metrics collection")
 
         if self.fetch_tags:
             virtual_machines, vm_labels, vm_tags = yield parallelize(
@@ -2001,14 +2007,14 @@ class VmwareCollector():
                         snapshot['timestamp_seconds'],
                     )
 
-        logging.info("Finished vm metrics collection")
+        logging.debug("Finished vm metrics collection")
 
     @defer.inlineCallbacks
     def _vmware_get_hosts(self, host_metrics):
         """
         Get Host (ESXi) information
         """
-        logging.info("Starting host metrics collection")
+        logging.debug("Starting host metrics collection")
 
         if self.fetch_tags:
             results, host_labels, host_tags = yield parallelize(
@@ -2049,7 +2055,7 @@ class VmwareCollector():
                 labels += customLabels
 
             except KeyError as e:
-                logging.info(
+                logging.error(
                     "Key error, unable to register host {error}, host labels are {host_labels}".format(
                         error=e, host_labels=host_labels
                     )
@@ -2223,7 +2229,7 @@ class VmwareCollector():
                 labels + [hardware_model, hardware_cpu_model],
                 1
             )
-        logging.info("Finished host metrics collection")
+        logging.debug("Finished host metrics collection")
         return results
 
 
@@ -2329,7 +2335,7 @@ class VMWareMetricsResource(Resource):
         """ gets the latest metrics """
         section = request.args.get(b'section', [b'default'])[0].decode('utf-8')
         if section not in self.config.keys():
-            logging.info("{} is not a valid section, using default".format(section))
+            logging.error("{} is not a valid section, using default".format(section))
             section = 'default'
 
         if self.config[section].get('vsphere_host') and self.config[section].get('vsphere_host') != "None":
@@ -2340,7 +2346,7 @@ class VMWareMetricsResource(Resource):
             vsphere_host = request.args.get(b'vsphere_host')[0].decode('utf-8')
         else:
             request.setResponseCode(500)
-            logging.info("No vsphere_host or target defined")
+            logging.error("No vsphere_host or target defined")
             request.write(b'No vsphere_host or target defined!\n')
             request.finish()
             return
