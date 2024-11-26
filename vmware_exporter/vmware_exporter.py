@@ -72,6 +72,13 @@ stderr_handler.setFormatter(formatter)
 logger.addHandler(stdout_handler)
 logger.addHandler(stderr_handler)
 
+# Filter to exclude ERROR messages from stdout_handler
+class NoErrorFilter(logging.Filter):
+    def filter(self, record):
+        return record.levelno < logging.ERROR
+
+stdout_handler.addFilter(NoErrorFilter())
+
 ## Uncomment the following lines to send DEBUG messages to stdout ##
 # debug_handler = logging.StreamHandler(sys.stdout)
 # debug_handler.setLevel(logging.DEBUG)
@@ -431,8 +438,8 @@ class VmwareCollector():
         vsphere_host = self.host
 
         metrics = self._create_metric_containers()
-
-        logging.info("--START-- collecting metrics from {vsphere_host}".format(vsphere_host=vsphere_host))
+        print('<6>Blah blah blah ...', file=sys.stderr)
+        logging.info("<7> --START-- collecting metrics from {vsphere_host}".format(vsphere_host=vsphere_host))
 
         self._labels = {}
 
