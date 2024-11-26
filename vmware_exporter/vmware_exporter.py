@@ -64,7 +64,7 @@ stdout_handler.setLevel(logging.INFO)
 stderr_handler.setLevel(logging.ERROR)
 
 # Create formatters and add them to the handlers
-formatter = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
+formatter = logging.Formatter('%(levelname)s: %(message)s')
 stdout_handler.setFormatter(formatter)
 stderr_handler.setFormatter(formatter)
 
@@ -426,7 +426,7 @@ class VmwareCollector():
 
         metrics = self._create_metric_containers()
 
-        logging.info("Start collecting metrics from {vsphere_host}".format(vsphere_host=vsphere_host))
+        logging.info("--START-- collecting metrics from {vsphere_host}".format(vsphere_host=vsphere_host))
 
         self._labels = {}
 
@@ -457,7 +457,7 @@ class VmwareCollector():
 
         yield self._vmware_disconnect()
 
-        logging.info("Finished collecting metrics from {vsphere_host}".format(vsphere_host=vsphere_host))
+        logging.info("--END-- collecting metrics from {vsphere_host}".format(vsphere_host=vsphere_host))
 
         return list(metrics.values())  # noqa: F705
 
@@ -559,7 +559,7 @@ class VmwareCollector():
         tags are finally stored by category: vms, hosts, and datastores
         and linked to object moid
         """
-        logging.info("Fetching tags")
+        logging.debug("Fetching tags")
         start = datetime.datetime.utcnow()
 
         attachedObjs = yield self._attachedObjectsOnTags
@@ -583,7 +583,7 @@ class VmwareCollector():
                     tags[section][obj.get('id')].append(tagName)
 
         fetch_time = datetime.datetime.utcnow() - start
-        logging.info("Fetched tags ({fetch_time})".format(fetch_time=fetch_time))
+        logging.debug("Fetched tags ({fetch_time})".format(fetch_time=fetch_time))
 
         return tags
 
@@ -637,7 +637,7 @@ class VmwareCollector():
     @run_once_property
     @defer.inlineCallbacks
     def datastore_inventory(self):
-        logging.info("Fetching vim.Datastore inventory")
+        logging.debug("Fetching vim.Datastore inventory")
         start = datetime.datetime.utcnow()
         properties = [
             'name',
@@ -691,7 +691,7 @@ class VmwareCollector():
     @run_once_property
     @defer.inlineCallbacks
     def host_system_inventory(self):
-        logging.info("Fetching vim.HostSystem inventory")
+        logging.debug("Fetching vim.HostSystem inventory")
         start = datetime.datetime.utcnow()
         properties = [
             'name',
@@ -750,7 +750,7 @@ class VmwareCollector():
             )
 
         fetch_time = datetime.datetime.utcnow() - start
-        logging.info("Fetched vim.HostSystem inventory ({fetch_time})".format(fetch_time=fetch_time))
+        logging.debug("Fetched vim.HostSystem inventory ({fetch_time})".format(fetch_time=fetch_time))
 
         return host_systems
 
