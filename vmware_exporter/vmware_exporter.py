@@ -51,6 +51,26 @@ from .defer import parallelize, run_once_property
 
 from .__init__ import __version__
 
+# Create a logger
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
+
+# Create handlers
+stdout_handler = logging.StreamHandler(sys.stdout)
+stderr_handler = logging.StreamHandler(sys.stderr)
+
+# Set levels
+stdout_handler.setLevel(logging.INFO)
+stderr_handler.setLevel(logging.ERROR)
+
+# Create formatters and add them to the handlers
+formatter = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
+stdout_handler.setFormatter(formatter)
+stderr_handler.setFormatter(formatter)
+
+# Add handlers to the logger
+logger.addHandler(stdout_handler)
+logger.addHandler(stderr_handler)
 
 class VmwareCollector():
 
