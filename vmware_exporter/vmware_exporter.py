@@ -438,8 +438,8 @@ class VmwareCollector():
         vsphere_host = self.host
 
         metrics = self._create_metric_containers()
-        print('<6>Blah blah blah ...', file=sys.stderr)
-        logging.info("<7> --START-- collecting metrics from {vsphere_host}".format(vsphere_host=vsphere_host))
+        
+        logging.info("--START-- collecting metrics from {vsphere_host}".format(vsphere_host=vsphere_host))
 
         self._labels = {}
 
